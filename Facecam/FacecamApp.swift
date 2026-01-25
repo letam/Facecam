@@ -16,6 +16,11 @@ struct FacecamApp: App {
                 selectedShape: $selectedShape,
                 isCameraVisible: $isCameraVisible
             )
+            .onAppear {
+                windowController.onShapeChanged = { [self] newShape in
+                    selectedShape = newShape
+                }
+            }
         }
         .menuBarExtraStyle(.window)
     }
@@ -37,8 +42,9 @@ enum CameraShape: String, CaseIterable, Identifiable {
     }
 }
 
-class CameraWindowController: ObservableObject {
+class CameraWindowController: ObservableObject, CameraWindowDelegate {
     private var window: CameraWindow?
+    var onShapeChanged: ((CameraShape) -> Void)?
 
     @Published var isVisible: Bool = false {
         didSet {
@@ -59,6 +65,7 @@ class CameraWindowController: ObservableObject {
     private func showWindow() {
         if window == nil {
             window = CameraWindow()
+            window?.windowDelegate = self
         }
         window?.updateShape(shape)
         window?.makeKeyAndOrderFront(nil)
@@ -71,5 +78,16 @@ class CameraWindowController: ObservableObject {
     func updateShape(_ shape: CameraShape) {
         self.shape = shape
         window?.updateShape(shape)
+    }
+
+    // MARK: - CameraWindowDelegate
+
+    func cameraWindowDidChangeShape(_ shape: CameraShape) {
+        self.shape = shape
+        onShapeChanged?(shape)
+    }
+
+    func cameraWindowDidRequestHide() {
+        isVisible = false
     }
 }

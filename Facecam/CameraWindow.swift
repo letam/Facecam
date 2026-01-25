@@ -1,9 +1,16 @@
 import AppKit
+import AVFoundation
 import SwiftUI
+
+protocol CameraWindowDelegate: AnyObject {
+    func cameraWindowDidChangeShape(_ shape: CameraShape)
+    func cameraWindowDidRequestHide()
+}
 
 class CameraWindow: NSPanel {
     private var cameraView: NSView?
     private var currentShape: CameraShape = .circle
+    weak var windowDelegate: CameraWindowDelegate?
 
     private let defaultWindowSize = NSSize(width: 200, height: 200)
     private let minimumWindowSize = NSSize(width: 100, height: 100)
@@ -27,6 +34,7 @@ class CameraWindow: NSPanel {
         setupWindow()
         setupCameraView()
         setupResizeHandling()
+        setupContextMenu()
     }
 
     private func setupWindow() {
@@ -74,6 +82,83 @@ class CameraWindow: NSPanel {
             name: NSWindow.didMoveNotification,
             object: self
         )
+    }
+
+    private func setupContextMenu() {
+        let menu = NSMenu()
+
+        // Shape submenu
+        let shapeMenu = NSMenu()
+        for shape in CameraShape.allCases {
+            let item = NSMenuItem(
+                title: shape.rawValue,
+                action: #selector(shapeMenuItemClicked(_:)),
+                keyEquivalent: ""
+            )
+            item.representedObject = shape
+            item.target = self
+            shapeMenu.addItem(item)
+        }
+        let shapeItem = NSMenuItem(title: "Shape", action: nil, keyEquivalent: "")
+        shapeItem.submenu = shapeMenu
+        menu.addItem(shapeItem)
+
+        // Camera submenu (if multiple cameras)
+        let cameras = CameraManager.shared.availableCameras
+        if cameras.count > 1 {
+            let cameraMenu = NSMenu()
+            for camera in cameras {
+                let item = NSMenuItem(
+                    title: camera.localizedName,
+                    action: #selector(cameraMenuItemClicked(_:)),
+                    keyEquivalent: ""
+                )
+                item.representedObject = camera
+                item.target = self
+                cameraMenu.addItem(item)
+            }
+            let cameraItem = NSMenuItem(title: "Camera", action: nil, keyEquivalent: "")
+            cameraItem.submenu = cameraMenu
+            menu.addItem(cameraItem)
+        }
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Hide option
+        let hideItem = NSMenuItem(
+            title: "Hide",
+            action: #selector(hideMenuItemClicked),
+            keyEquivalent: ""
+        )
+        hideItem.target = self
+        menu.addItem(hideItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Quit option
+        let quitItem = NSMenuItem(
+            title: "Quit Facecam",
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        )
+        menu.addItem(quitItem)
+
+        contentView?.menu = menu
+    }
+
+    @objc private func shapeMenuItemClicked(_ sender: NSMenuItem) {
+        guard let shape = sender.representedObject as? CameraShape else { return }
+        updateShape(shape)
+        windowDelegate?.cameraWindowDidChangeShape(shape)
+    }
+
+    @objc private func cameraMenuItemClicked(_ sender: NSMenuItem) {
+        guard let camera = sender.representedObject as? AVCaptureDevice else { return }
+        CameraManager.shared.selectCamera(camera)
+    }
+
+    @objc private func hideMenuItemClicked() {
+        windowDelegate?.cameraWindowDidRequestHide()
     }
 
     @objc private func windowDidResize(_ notification: Notification) {
