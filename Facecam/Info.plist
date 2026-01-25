@@ -23,7 +23,7 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSCameraUsageDescription</key>
-    <string>LoomCam needs access to your camera to display a floating webcam preview.</string>
+    <string>Facecam needs access to your camera to display a floating webcam preview.</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
 </dict>

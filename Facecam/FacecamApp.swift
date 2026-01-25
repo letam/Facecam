@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct LoomCamApp: App {
+struct FacecamApp: App {
     @StateObject private var cameraManager = CameraManager.shared
     @StateObject private var windowController = CameraWindowController()
 
@@ -9,7 +9,7 @@ struct LoomCamApp: App {
     @AppStorage("isCameraVisible") private var isCameraVisible: Bool = false
 
     var body: some Scene {
-        MenuBarExtra("LoomCam", systemImage: "camera.fill") {
+        MenuBarExtra("Facecam", systemImage: "camera.fill") {
             ContentView(
                 cameraManager: cameraManager,
                 windowController: windowController,

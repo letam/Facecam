@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1000001233456780000001 /* LoomCamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001233456780000011 /* LoomCamApp.swift */; };
+		A1000001233456780000001 /* FacecamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001233456780000011 /* FacecamApp.swift */; };
 		A1000001233456780000002 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001233456780000012 /* CameraManager.swift */; };
 		A1000001233456780000003 /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001233456780000013 /* CameraPreviewView.swift */; };
 		A1000001233456780000004 /* CameraWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001233456780000014 /* CameraWindow.swift */; };
@@ -15,14 +15,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A1000001233456780000011 /* LoomCamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoomCamApp.swift; sourceTree = "<group>"; };
+		A1000001233456780000011 /* FacecamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacecamApp.swift; sourceTree = "<group>"; };
 		A1000001233456780000012 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
 		A1000001233456780000013 /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
 		A1000001233456780000014 /* CameraWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraWindow.swift; sourceTree = "<group>"; };
 		A1000001233456780000015 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1000001233456780000016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A1000001233456780000017 /* LoomCam.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LoomCam.entitlements; sourceTree = "<group>"; };
-		A1000001233456780000020 /* LoomCam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LoomCam.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1000001233456780000017 /* Facecam.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Facecam.entitlements; sourceTree = "<group>"; };
+		A1000001233456780000020 /* Facecam.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Facecam.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,29 +39,29 @@
 		A1000001233456780000040 = {
 			isa = PBXGroup;
 			children = (
-				A1000001233456780000041 /* LoomCam */,
+				A1000001233456780000041 /* Facecam */,
 				A1000001233456780000042 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		A1000001233456780000041 /* LoomCam */ = {
+		A1000001233456780000041 /* Facecam */ = {
 			isa = PBXGroup;
 			children = (
-				A1000001233456780000011 /* LoomCamApp.swift */,
+				A1000001233456780000011 /* FacecamApp.swift */,
 				A1000001233456780000012 /* CameraManager.swift */,
 				A1000001233456780000013 /* CameraPreviewView.swift */,
 				A1000001233456780000014 /* CameraWindow.swift */,
 				A1000001233456780000015 /* ContentView.swift */,
 				A1000001233456780000016 /* Info.plist */,
-				A1000001233456780000017 /* LoomCam.entitlements */,
+				A1000001233456780000017 /* Facecam.entitlements */,
 			);
-			path = LoomCam;
+			path = Facecam;
 			sourceTree = "<group>";
 		};
 		A1000001233456780000042 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A1000001233456780000020 /* LoomCam.app */,
+				A1000001233456780000020 /* Facecam.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -69,9 +69,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A1000001233456780000050 /* LoomCam */ = {
+		A1000001233456780000050 /* Facecam */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A1000001233456780000070 /* Build configuration list for PBXNativeTarget "LoomCam" */;
+			buildConfigurationList = A1000001233456780000070 /* Build configuration list for PBXNativeTarget "Facecam" */;
 			buildPhases = (
 				A1000001233456780000051 /* Sources */,
 				A1000001233456780000030 /* Frameworks */,
@@ -81,9 +81,9 @@
 			);
 			dependencies = (
 			);
-			name = LoomCam;
-			productName = LoomCam;
-			productReference = A1000001233456780000020 /* LoomCam.app */;
+			name = Facecam;
+			productName = Facecam;
+			productReference = A1000001233456780000020 /* Facecam.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -101,7 +101,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A1000001233456780000061 /* Build configuration list for PBXProject "LoomCam" */;
+			buildConfigurationList = A1000001233456780000061 /* Build configuration list for PBXProject "Facecam" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -114,7 +114,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A1000001233456780000050 /* LoomCam */,
+				A1000001233456780000050 /* Facecam */,
 			);
 		};
 /* End PBXProject section */
@@ -134,7 +134,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1000001233456780000001 /* LoomCamApp.swift in Sources */,
+				A1000001233456780000001 /* FacecamApp.swift in Sources */,
 				A1000001233456780000002 /* CameraManager.swift in Sources */,
 				A1000001233456780000003 /* CameraPreviewView.swift in Sources */,
 				A1000001233456780000004 /* CameraWindow.swift in Sources */,
@@ -266,14 +266,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = LoomCam/LoomCam.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Facecam/Facecam.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = LoomCam/Info.plist;
+				INFOPLIST_FILE = Facecam/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -293,14 +293,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = LoomCam/LoomCam.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Facecam/Facecam.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = LoomCam/Info.plist;
+				INFOPLIST_FILE = Facecam/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -318,7 +318,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A1000001233456780000061 /* Build configuration list for PBXProject "LoomCam" */ = {
+		A1000001233456780000061 /* Build configuration list for PBXProject "Facecam" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A1000001233456780000080 /* Debug */,
@@ -327,7 +327,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A1000001233456780000070 /* Build configuration list for PBXNativeTarget "LoomCam" */ = {
+		A1000001233456780000070 /* Build configuration list for PBXNativeTarget "Facecam" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A1000001233456780000082 /* Debug */,
