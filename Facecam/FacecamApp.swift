@@ -80,6 +80,10 @@ class CameraWindowController: ObservableObject, CameraWindowDelegate {
         window?.updateShape(shape)
     }
 
+    func centerOnScreen() {
+        window?.centerOnScreen()
+    }
+
     // MARK: - CameraWindowDelegate
 
     func cameraWindowDidChangeShape(_ shape: CameraShape) {

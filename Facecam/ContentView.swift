@@ -39,7 +39,7 @@ struct ContentView: View {
                     .font(.headline)
             }
 
-            Text("LoomCam needs camera access to show your webcam feed.")
+            Text("Facecam needs camera access to show your webcam feed.")
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -107,6 +107,15 @@ struct ContentView: View {
                 windowController.updateShape(newValue)
             }
         }
+
+        Divider()
+
+        Button {
+            windowController.centerOnScreen()
+        } label: {
+            Label("Full Screen View", systemImage: "arrow.up.left.and.arrow.down.right")
+        }
+        .disabled(!isCameraVisible)
     }
 
     private func iconForShape(_ shape: CameraShape) -> String {

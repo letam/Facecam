@@ -14,7 +14,7 @@ class CameraWindow: NSPanel {
 
     private let defaultWindowSize = NSSize(width: 200, height: 200)
     private let minimumWindowSize = NSSize(width: 100, height: 100)
-    private let maximumWindowSize = NSSize(width: 600, height: 600)
+    private let maximumWindowSize = NSSize(width: 2000, height: 2000)
 
     init() {
         let savedFrame = Self.loadSavedFrame() ?? NSRect(
@@ -122,6 +122,15 @@ class CameraWindow: NSPanel {
             menu.addItem(cameraItem)
         }
 
+        // Center on screen option
+        let centerItem = NSMenuItem(
+            title: "Full Screen View",
+            action: #selector(centerOnScreenClicked),
+            keyEquivalent: ""
+        )
+        centerItem.target = self
+        menu.addItem(centerItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // Hide option
@@ -159,6 +168,40 @@ class CameraWindow: NSPanel {
 
     @objc private func hideMenuItemClicked() {
         windowDelegate?.cameraWindowDidRequestHide()
+    }
+
+    @objc private func centerOnScreenClicked() {
+        centerOnScreen()
+    }
+
+    func centerOnScreen() {
+        guard let screen = NSScreen.main else { return }
+
+        let margin: CGFloat = 100
+        let screenFrame = screen.visibleFrame
+
+        // Calculate size with margin, maintaining square aspect ratio
+        let availableWidth = screenFrame.width - (margin * 2)
+        let availableHeight = screenFrame.height - (margin * 2)
+        let size = min(availableWidth, availableHeight)
+
+        let newOrigin = NSPoint(
+            x: screenFrame.midX - size / 2,
+            y: screenFrame.midY - size / 2
+        )
+
+        // Temporarily allow larger size for full screen view
+        let savedMaxSize = maxSize
+        maxSize = NSSize(width: size, height: size)
+
+        // Switch to rounded rectangle shape for full screen
+        updateShape(.rounded)
+        windowDelegate?.cameraWindowDidChangeShape(.rounded)
+
+        setFrame(NSRect(origin: newOrigin, size: NSSize(width: size, height: size)), display: true, animate: true)
+        saveFrame()
+
+        maxSize = savedMaxSize
     }
 
     @objc private func windowDidResize(_ notification: Notification) {
