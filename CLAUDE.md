@@ -10,7 +10,7 @@ xcodebuild -project Facecam.xcodeproj -scheme Facecam -configuration Debug build
 
 Run the built app:
 ```bash
-open ~/Library/Developer/Xcode/DerivedData/Facecam-*/Build/Products/Debug/Facecam.app
+open "$(ls -td ~/Library/Developer/Xcode/DerivedData/Facecam-*/Build/Products/Debug/Facecam.app | head -1)"
 ```
 
 ## Project Structure
