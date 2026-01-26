@@ -6,7 +6,7 @@ struct FacecamApp: App {
     @StateObject private var windowController = CameraWindowController()
 
     @AppStorage("selectedShape") private var selectedShape: CameraShape = .circle
-    @AppStorage("isCameraVisible") private var isCameraVisible: Bool = false
+    @AppStorage("isCameraVisible") private var isCameraVisible: Bool = true
 
     var body: some Scene {
         MenuBarExtra("Facecam", systemImage: "camera.fill") {
