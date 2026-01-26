@@ -58,8 +58,8 @@ class CameraManager: ObservableObject {
                     self?.isAuthorized = granted
                     self?.authorizationStatus = granted ? .authorized : .denied
                     if granted {
+                        // loadAvailableCameras will select the camera and start capture
                         self?.loadAvailableCameras()
-                        self?.selectCamera(self?.availableCameras.first)
                     }
                 }
             }
@@ -82,6 +82,11 @@ class CameraManager: ObservableObject {
 
             if self.selectedCamera == nil && !self.availableCameras.isEmpty {
                 self.selectCamera(self.availableCameras.first)
+            }
+
+            // Start capture if authorized and a camera is selected
+            if self.isAuthorized && self.selectedCamera != nil {
+                self.startCapture()
             }
         }
     }
