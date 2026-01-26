@@ -11,6 +11,7 @@ class ResizableContentView: NSView {
     private let resizeEdgeThreshold: CGFloat = 8
     private var resizeDirection: ResizeDirection = .none
     private weak var parentWindow: NSWindow?
+    var onDoubleClick: (() -> Void)?
 
     enum ResizeDirection {
         case none, left, right, top, bottom
@@ -67,6 +68,12 @@ class ResizableContentView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
+        // Handle double-click to hide
+        if event.clickCount == 2 {
+            onDoubleClick?()
+            return
+        }
+
         let point = convert(event.locationInWindow, from: nil)
         resizeDirection = resizeDirection(for: point)
 
@@ -219,6 +226,9 @@ class CameraWindow: NSPanel {
         // Use resizable content view for edge dragging
         let resizableView = ResizableContentView(frame: contentView?.bounds ?? .zero, window: self)
         resizableView.autoresizingMask = [.width, .height]
+        resizableView.onDoubleClick = { [weak self] in
+            self?.windowDelegate?.cameraWindowDidRequestHide()
+        }
         contentView = resizableView
 
         let hostingView = NSHostingView(
