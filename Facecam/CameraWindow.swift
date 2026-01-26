@@ -313,6 +313,49 @@ class CameraWindow: NSPanel {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Save preset submenu
+        let savePresetMenu = NSMenu()
+        for slot in 1...10 {
+            let hasState = WindowStateManager.shared.hasState(inSlot: slot)
+            let title = hasState ? "Slot \(slot) (overwrite)" : "Slot \(slot)"
+            let item = NSMenuItem(
+                title: title,
+                action: #selector(savePresetClicked(_:)),
+                keyEquivalent: ""
+            )
+            item.tag = slot
+            item.target = self
+            savePresetMenu.addItem(item)
+        }
+        let savePresetItem = NSMenuItem(title: "Save Position", action: nil, keyEquivalent: "")
+        savePresetItem.submenu = savePresetMenu
+        menu.addItem(savePresetItem)
+
+        // Restore preset submenu
+        let restorePresetMenu = NSMenu()
+        let savedSlots = WindowStateManager.shared.savedSlots()
+        if savedSlots.isEmpty {
+            let emptyItem = NSMenuItem(title: "No saved positions", action: nil, keyEquivalent: "")
+            emptyItem.isEnabled = false
+            restorePresetMenu.addItem(emptyItem)
+        } else {
+            for slot in savedSlots {
+                let item = NSMenuItem(
+                    title: "Slot \(slot)",
+                    action: #selector(restorePresetClicked(_:)),
+                    keyEquivalent: ""
+                )
+                item.tag = slot
+                item.target = self
+                restorePresetMenu.addItem(item)
+            }
+        }
+        let restorePresetItem = NSMenuItem(title: "Restore Position", action: nil, keyEquivalent: "")
+        restorePresetItem.submenu = restorePresetMenu
+        menu.addItem(restorePresetItem)
+
+        menu.addItem(NSMenuItem.separator())
+
         // Hide option
         let hideItem = NSMenuItem(
             title: "Hide",
@@ -352,6 +395,30 @@ class CameraWindow: NSPanel {
 
     @objc private func toggleFullScreenClicked() {
         toggleFullScreen()
+    }
+
+    @objc private func savePresetClicked(_ sender: NSMenuItem) {
+        let slot = sender.tag
+        let state = WindowState(frame: frame, shape: currentShape)
+        WindowStateManager.shared.saveState(state, toSlot: slot)
+    }
+
+    @objc private func restorePresetClicked(_ sender: NSMenuItem) {
+        let slot = sender.tag
+        guard let state = WindowStateManager.shared.loadState(fromSlot: slot) else { return }
+
+        updateShape(state.cameraShape)
+        windowDelegate?.cameraWindowDidChangeShape(state.cameraShape)
+        setFrame(state.frame, display: true, animate: true)
+        saveFrame()
+
+        // Exit full screen mode if we were in it
+        if isFullScreen {
+            isFullScreen = false
+            previousFrame = nil
+            previousShape = nil
+            updateFullScreenMenuItemTitle()
+        }
     }
 
     func toggleFullScreen() {

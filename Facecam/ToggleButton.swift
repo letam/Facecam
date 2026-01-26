@@ -3,6 +3,7 @@ import AppKit
 class DraggableButtonView: NSView {
     var onToggle: (() -> Void)?
     var onDrag: ((NSPoint) -> Void)?
+    var onRestorePreset: ((Int) -> Void)?
 
     private var isDragging = false
     private var dragStartLocation: NSPoint = .zero
@@ -121,6 +122,25 @@ class DraggableButtonView: NSView {
         showItem.target = self
         menu.addItem(showItem)
 
+        // Restore preset submenu
+        let savedSlots = WindowStateManager.shared.savedSlots()
+        if !savedSlots.isEmpty {
+            let restorePresetMenu = NSMenu()
+            for slot in savedSlots {
+                let item = NSMenuItem(
+                    title: "Slot \(slot)",
+                    action: #selector(restorePresetClicked(_:)),
+                    keyEquivalent: ""
+                )
+                item.tag = slot
+                item.target = self
+                restorePresetMenu.addItem(item)
+            }
+            let restorePresetItem = NSMenuItem(title: "Restore Position", action: nil, keyEquivalent: "")
+            restorePresetItem.submenu = restorePresetMenu
+            menu.addItem(restorePresetItem)
+        }
+
         menu.addItem(NSMenuItem.separator())
 
         let quitItem = NSMenuItem(
@@ -136,12 +156,23 @@ class DraggableButtonView: NSView {
     @objc private func showCameraClicked() {
         onToggle?()
     }
+
+    @objc private func restorePresetClicked(_ sender: NSMenuItem) {
+        let slot = sender.tag
+        onRestorePreset?(slot)
+    }
 }
 
 class ToggleButton: NSPanel {
     var onToggle: (() -> Void)? {
         didSet {
             buttonView?.onToggle = onToggle
+        }
+    }
+
+    var onRestorePreset: ((Int) -> Void)? {
+        didSet {
+            buttonView?.onRestorePreset = onRestorePreset
         }
     }
 

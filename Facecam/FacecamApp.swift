@@ -72,6 +72,22 @@ class CameraWindowController: ObservableObject, CameraWindowDelegate {
         toggleButton?.onToggle = { [weak self] in
             self?.isVisible = true
         }
+        toggleButton?.onRestorePreset = { [weak self] slot in
+            self?.restorePreset(slot: slot)
+        }
+    }
+
+    func restorePreset(slot: Int) {
+        guard let state = WindowStateManager.shared.loadState(fromSlot: slot) else { return }
+
+        // Show window first if needed
+        isVisible = true
+
+        // Apply the preset
+        shape = state.cameraShape
+        window?.updateShape(state.cameraShape)
+        window?.setFrame(state.frame, display: true, animate: true)
+        onShapeChanged?(state.cameraShape)
     }
 
     private func showWindow() {
