@@ -7,6 +7,164 @@ protocol CameraWindowDelegate: AnyObject {
     func cameraWindowDidRequestHide()
 }
 
+class ResizableContentView: NSView {
+    private let resizeEdgeThreshold: CGFloat = 8
+    private var resizeDirection: ResizeDirection = .none
+    private weak var parentWindow: NSWindow?
+
+    enum ResizeDirection {
+        case none, left, right, top, bottom
+        case topLeft, topRight, bottomLeft, bottomRight
+    }
+
+    init(frame: NSRect, window: NSWindow) {
+        self.parentWindow = window
+        super.init(frame: frame)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach { removeTrackingArea($0) }
+        let options: NSTrackingArea.Options = [.mouseMoved, .activeAlways, .inVisibleRect]
+        addTrackingArea(NSTrackingArea(rect: bounds, options: options, owner: self, userInfo: nil))
+    }
+
+    private func resizeDirection(for point: NSPoint) -> ResizeDirection {
+        let nearLeft = point.x < resizeEdgeThreshold
+        let nearRight = point.x > bounds.width - resizeEdgeThreshold
+        let nearBottom = point.y < resizeEdgeThreshold
+        let nearTop = point.y > bounds.height - resizeEdgeThreshold
+
+        if nearLeft && nearBottom { return .bottomLeft }
+        if nearRight && nearBottom { return .bottomRight }
+        if nearLeft && nearTop { return .topLeft }
+        if nearRight && nearTop { return .topRight }
+        if nearLeft { return .left }
+        if nearRight { return .right }
+        if nearBottom { return .bottom }
+        if nearTop { return .top }
+        return .none
+    }
+
+    private func cursor(for direction: ResizeDirection) -> NSCursor {
+        switch direction {
+        case .left, .right: return .resizeLeftRight
+        case .top, .bottom: return .resizeUpDown
+        case .topLeft, .bottomRight: return .crosshair
+        case .topRight, .bottomLeft: return .crosshair
+        case .none: return .arrow
+        }
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let direction = resizeDirection(for: point)
+        cursor(for: direction).set()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        resizeDirection = resizeDirection(for: point)
+
+        if resizeDirection == .none {
+            super.mouseDown(with: event)
+        }
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard resizeDirection != .none, let window = parentWindow else {
+            super.mouseDragged(with: event)
+            return
+        }
+
+        var frame = window.frame
+        let deltaX = event.deltaX
+        let deltaY = event.deltaY
+        let aspectRatio = window.aspectRatio
+        let hasAspectRatio = aspectRatio.width > 0 && aspectRatio.height > 0
+
+        switch resizeDirection {
+        case .right, .bottomRight:
+            var newWidth = frame.width + deltaX
+            if hasAspectRatio {
+                newWidth = max(window.minSize.width, min(window.maxSize.width, newWidth))
+                let newHeight = newWidth * aspectRatio.height / aspectRatio.width
+                frame.size = NSSize(width: newWidth, height: newHeight)
+                frame.origin.y -= (newHeight - window.frame.height)
+            } else {
+                frame.size.width = newWidth
+            }
+        case .left, .bottomLeft:
+            var newWidth = frame.width - deltaX
+            if hasAspectRatio {
+                newWidth = max(window.minSize.width, min(window.maxSize.width, newWidth))
+                let newHeight = newWidth * aspectRatio.height / aspectRatio.width
+                let widthDiff = newWidth - window.frame.width
+                frame.origin.x -= widthDiff
+                frame.origin.y -= (newHeight - window.frame.height)
+                frame.size = NSSize(width: newWidth, height: newHeight)
+            } else {
+                frame.origin.x += deltaX
+                frame.size.width = newWidth
+            }
+        case .top, .topRight:
+            var newHeight = frame.height + deltaY
+            if hasAspectRatio {
+                newHeight = max(window.minSize.height, min(window.maxSize.height, newHeight))
+                let newWidth = newHeight * aspectRatio.width / aspectRatio.height
+                frame.size = NSSize(width: newWidth, height: newHeight)
+            } else {
+                frame.size.height = newHeight
+            }
+        case .topLeft:
+            var newHeight = frame.height + deltaY
+            if hasAspectRatio {
+                newHeight = max(window.minSize.height, min(window.maxSize.height, newHeight))
+                let newWidth = newHeight * aspectRatio.width / aspectRatio.height
+                let widthDiff = newWidth - window.frame.width
+                frame.origin.x -= widthDiff
+                frame.size = NSSize(width: newWidth, height: newHeight)
+            } else {
+                frame.size.height = newHeight
+            }
+        case .bottom:
+            var newHeight = frame.height - deltaY
+            if hasAspectRatio {
+                newHeight = max(window.minSize.height, min(window.maxSize.height, newHeight))
+                let newWidth = newHeight * aspectRatio.width / aspectRatio.height
+                let heightDiff = newHeight - window.frame.height
+                frame.origin.y -= heightDiff
+                frame.size = NSSize(width: newWidth, height: newHeight)
+            } else {
+                frame.origin.y += deltaY
+                frame.size.height = newHeight
+            }
+        case .none:
+            break
+        }
+
+        // Enforce min/max size
+        frame.size.width = max(window.minSize.width, min(window.maxSize.width, frame.size.width))
+        frame.size.height = max(window.minSize.height, min(window.maxSize.height, frame.size.height))
+
+        window.setFrame(frame, display: true)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        resizeDirection = .none
+        NSCursor.arrow.set()
+        super.mouseUp(with: event)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
+}
+
 class CameraWindow: NSPanel {
     private var cameraView: NSView?
     private var currentShape: CameraShape = .circle
@@ -58,6 +216,11 @@ class CameraWindow: NSPanel {
     }
 
     private func setupCameraView() {
+        // Use resizable content view for edge dragging
+        let resizableView = ResizableContentView(frame: contentView?.bounds ?? .zero, window: self)
+        resizableView.autoresizingMask = [.width, .height]
+        contentView = resizableView
+
         let hostingView = NSHostingView(
             rootView: CameraPreviewView(
                 captureSession: CameraManager.shared.captureSession,
@@ -65,10 +228,10 @@ class CameraWindow: NSPanel {
             )
         )
 
-        hostingView.frame = contentView?.bounds ?? .zero
+        hostingView.frame = resizableView.bounds
         hostingView.autoresizingMask = [.width, .height]
 
-        contentView?.addSubview(hostingView)
+        resizableView.addSubview(hostingView)
         cameraView = hostingView
 
         CameraManager.shared.startCapture()
