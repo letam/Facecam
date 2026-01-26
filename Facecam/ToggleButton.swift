@@ -1,9 +1,124 @@
 import AppKit
-import SwiftUI
+
+class DraggableButtonView: NSView {
+    var onToggle: (() -> Void)?
+    var onDrag: ((NSPoint) -> Void)?
+
+    private var isDragging = false
+    private var dragStartLocation: NSPoint = .zero
+    private var isHovered = false
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        setupTrackingArea()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTrackingArea()
+    }
+
+    private func setupTrackingArea() {
+        let trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        let fillOpacity: CGFloat = isHovered ? 0.4 : 0.15
+        let strokeOpacity: CGFloat = isHovered ? 0.5 : 0.2
+        let iconOpacity: CGFloat = isHovered ? 1.0 : 0.5
+
+        // Draw circle background
+        let circlePath = NSBezierPath(ovalIn: bounds.insetBy(dx: 1, dy: 1))
+        NSColor.black.withAlphaComponent(fillOpacity).setFill()
+        circlePath.fill()
+
+        NSColor.white.withAlphaComponent(strokeOpacity).setStroke()
+        circlePath.lineWidth = 1
+        circlePath.stroke()
+
+        // Draw camera icon
+        let iconSize: CGFloat = 18
+        let iconRect = NSRect(
+            x: (bounds.width - iconSize) / 2,
+            y: (bounds.height - iconSize) / 2,
+            width: iconSize,
+            height: iconSize
+        )
+
+        if let image = NSImage(systemSymbolName: "camera.fill", accessibilityDescription: nil) {
+            let config = NSImage.SymbolConfiguration(pointSize: iconSize, weight: .medium)
+            let configuredImage = image.withSymbolConfiguration(config)
+            configuredImage?.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: iconOpacity)
+        }
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHovered = true
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            self.animator().frame = self.frame.insetBy(dx: -2, dy: -2)
+        }
+        needsDisplay = true
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovered = false
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            self.animator().frame = self.frame.insetBy(dx: 2, dy: 2)
+        }
+        needsDisplay = true
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        isDragging = false
+        dragStartLocation = event.locationInWindow
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        isDragging = true
+        guard let window = window else { return }
+
+        let currentLocation = event.locationInWindow
+        let delta = NSPoint(
+            x: currentLocation.x - dragStartLocation.x,
+            y: currentLocation.y - dragStartLocation.y
+        )
+
+        let newOrigin = NSPoint(
+            x: window.frame.origin.x + delta.x,
+            y: window.frame.origin.y + delta.y
+        )
+
+        window.setFrameOrigin(newOrigin)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        if !isDragging {
+            onToggle?()
+        } else {
+            onDrag?(window?.frame.origin ?? .zero)
+        }
+        isDragging = false
+    }
+}
 
 class ToggleButton: NSPanel {
-    var onToggle: (() -> Void)?
+    var onToggle: (() -> Void)? {
+        didSet {
+            buttonView?.onToggle = onToggle
+        }
+    }
 
+    private var buttonView: DraggableButtonView?
     private let buttonSize: CGFloat = 44
 
     init() {
@@ -24,40 +139,25 @@ class ToggleButton: NSPanel {
 
         setupWindow()
         setupButton()
-        setupDragging()
     }
 
     private func setupWindow() {
         level = .floating
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        isMovableByWindowBackground = true
-        hasShadow = true
+        hasShadow = false
         backgroundColor = .clear
         isOpaque = false
     }
 
     private func setupButton() {
-        let hostingView = NSHostingView(rootView: ToggleButtonView(action: { [weak self] in
-            self?.onToggle?()
-        }))
+        let dragView = DraggableButtonView(frame: NSRect(x: 0, y: 0, width: buttonSize, height: buttonSize))
+        dragView.onToggle = onToggle
+        dragView.onDrag = { [weak self] _ in
+            self?.savePosition()
+        }
 
-        hostingView.frame = contentView?.bounds ?? .zero
-        hostingView.autoresizingMask = [.width, .height]
-
-        contentView?.addSubview(hostingView)
-    }
-
-    private func setupDragging() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(windowDidMove),
-            name: NSWindow.didMoveNotification,
-            object: self
-        )
-    }
-
-    @objc private func windowDidMove(_ notification: Notification) {
-        savePosition()
+        contentView?.addSubview(dragView)
+        buttonView = dragView
     }
 
     private func savePosition() {
@@ -79,38 +179,4 @@ class ToggleButton: NSPanel {
 
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-}
-
-struct ToggleButtonView: View {
-    let action: () -> Void
-
-    @State private var isHovered = false
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        Circle()
-                            .strokeBorder(Color.white.opacity(0.3), lineWidth: 1)
-                    )
-
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.white)
-            }
-        }
-        .buttonStyle(.plain)
-        .frame(width: 44, height: 44)
-        .scaleEffect(isHovered ? 1.1 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
-        .onHover { hovering in
-            isHovered = hovering
-        }
-    }
 }
