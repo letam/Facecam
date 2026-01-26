@@ -44,6 +44,7 @@ enum CameraShape: String, CaseIterable, Identifiable {
 
 class CameraWindowController: ObservableObject, CameraWindowDelegate {
     private var window: CameraWindow?
+    private var toggleButton: ToggleButton?
     var onShapeChanged: ((CameraShape) -> Void)?
 
     @Published var isVisible: Bool = false {
@@ -62,6 +63,17 @@ class CameraWindowController: ObservableObject, CameraWindowDelegate {
         }
     }
 
+    init() {
+        setupToggleButton()
+    }
+
+    private func setupToggleButton() {
+        toggleButton = ToggleButton()
+        toggleButton?.onToggle = { [weak self] in
+            self?.isVisible = true
+        }
+    }
+
     private func showWindow() {
         if window == nil {
             window = CameraWindow()
@@ -69,10 +81,12 @@ class CameraWindowController: ObservableObject, CameraWindowDelegate {
         }
         window?.updateShape(shape)
         window?.makeKeyAndOrderFront(nil)
+        toggleButton?.orderOut(nil)
     }
 
     private func hideWindow() {
         window?.orderOut(nil)
+        toggleButton?.makeKeyAndOrderFront(nil)
     }
 
     func updateShape(_ shape: CameraShape) {
