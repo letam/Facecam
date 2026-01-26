@@ -172,7 +172,7 @@ class ResizableContentView: NSView {
     }
 }
 
-class CameraWindow: NSPanel {
+class CameraWindow: NSPanel, NSMenuDelegate {
     private var cameraView: NSView?
     private var currentShape: CameraShape = .circle
     weak var windowDelegate: CameraWindowDelegate?
@@ -186,6 +186,8 @@ class CameraWindow: NSPanel {
     private var previousFrame: NSRect?
     private var previousShape: CameraShape?
     private var fullScreenMenuItem: NSMenuItem?
+    private var savePresetMenu: NSMenu?
+    private var restorePresetMenu: NSMenu?
 
     init() {
         let savedFrame = Self.loadSavedFrame() ?? NSRect(
@@ -313,45 +315,20 @@ class CameraWindow: NSPanel {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Save preset submenu
-        let savePresetMenu = NSMenu()
-        for slot in 1...10 {
-            let hasState = WindowStateManager.shared.hasState(inSlot: slot)
-            let title = hasState ? "Slot \(slot) (overwrite)" : "Slot \(slot)"
-            let item = NSMenuItem(
-                title: title,
-                action: #selector(savePresetClicked(_:)),
-                keyEquivalent: ""
-            )
-            item.tag = slot
-            item.target = self
-            savePresetMenu.addItem(item)
-        }
+        // Save preset submenu (dynamic)
+        let saveMenu = NSMenu()
+        saveMenu.delegate = self
+        self.savePresetMenu = saveMenu
         let savePresetItem = NSMenuItem(title: "Save Position", action: nil, keyEquivalent: "")
-        savePresetItem.submenu = savePresetMenu
+        savePresetItem.submenu = saveMenu
         menu.addItem(savePresetItem)
 
-        // Restore preset submenu
-        let restorePresetMenu = NSMenu()
-        let savedSlots = WindowStateManager.shared.savedSlots()
-        if savedSlots.isEmpty {
-            let emptyItem = NSMenuItem(title: "No saved positions", action: nil, keyEquivalent: "")
-            emptyItem.isEnabled = false
-            restorePresetMenu.addItem(emptyItem)
-        } else {
-            for slot in savedSlots {
-                let item = NSMenuItem(
-                    title: "Slot \(slot)",
-                    action: #selector(restorePresetClicked(_:)),
-                    keyEquivalent: ""
-                )
-                item.tag = slot
-                item.target = self
-                restorePresetMenu.addItem(item)
-            }
-        }
+        // Restore preset submenu (dynamic)
+        let restoreMenu = NSMenu()
+        restoreMenu.delegate = self
+        self.restorePresetMenu = restoreMenu
         let restorePresetItem = NSMenuItem(title: "Restore Position", action: nil, keyEquivalent: "")
-        restorePresetItem.submenu = restorePresetMenu
+        restorePresetItem.submenu = restoreMenu
         menu.addItem(restorePresetItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -524,6 +501,45 @@ class CameraWindow: NSPanel {
             return nil
         }
         return NSRect(x: x, y: y, width: width, height: height)
+    }
+
+    // MARK: - NSMenuDelegate
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        if menu === savePresetMenu {
+            menu.removeAllItems()
+            for slot in 1...10 {
+                let hasState = WindowStateManager.shared.hasState(inSlot: slot)
+                let title = hasState ? "Slot \(slot) (overwrite)" : "Slot \(slot)"
+                let item = NSMenuItem(
+                    title: title,
+                    action: #selector(savePresetClicked(_:)),
+                    keyEquivalent: ""
+                )
+                item.tag = slot
+                item.target = self
+                menu.addItem(item)
+            }
+        } else if menu === restorePresetMenu {
+            menu.removeAllItems()
+            let savedSlots = WindowStateManager.shared.savedSlots()
+            if savedSlots.isEmpty {
+                let emptyItem = NSMenuItem(title: "No saved positions", action: nil, keyEquivalent: "")
+                emptyItem.isEnabled = false
+                menu.addItem(emptyItem)
+            } else {
+                for slot in savedSlots {
+                    let item = NSMenuItem(
+                        title: "Slot \(slot)",
+                        action: #selector(restorePresetClicked(_:)),
+                        keyEquivalent: ""
+                    )
+                    item.tag = slot
+                    item.target = self
+                    menu.addItem(item)
+                }
+            }
+        }
     }
 
     override var canBecomeKey: Bool { true }
