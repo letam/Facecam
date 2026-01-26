@@ -109,6 +109,33 @@ class DraggableButtonView: NSView {
         }
         isDragging = false
     }
+
+    override func rightMouseDown(with event: NSEvent) {
+        let menu = NSMenu()
+
+        let showItem = NSMenuItem(
+            title: "Show Camera",
+            action: #selector(showCameraClicked),
+            keyEquivalent: ""
+        )
+        showItem.target = self
+        menu.addItem(showItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let quitItem = NSMenuItem(
+            title: "Quit Facecam",
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        )
+        menu.addItem(quitItem)
+
+        NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    @objc private func showCameraClicked() {
+        onToggle?()
+    }
 }
 
 class ToggleButton: NSPanel {
