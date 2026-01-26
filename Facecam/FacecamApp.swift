@@ -65,6 +65,11 @@ class CameraWindowController: ObservableObject, CameraWindowDelegate {
 
     init() {
         setupToggleButton()
+
+        // Show camera on launch
+        DispatchQueue.main.async { [weak self] in
+            self?.isVisible = true
+        }
     }
 
     private func setupToggleButton() {
