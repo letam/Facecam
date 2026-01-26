@@ -80,8 +80,12 @@ class CameraWindowController: ObservableObject, CameraWindowDelegate {
         window?.updateShape(shape)
     }
 
-    func centerOnScreen() {
-        window?.centerOnScreen()
+    func toggleFullScreen() {
+        window?.toggleFullScreen()
+    }
+
+    var isFullScreen: Bool {
+        window?.isFullScreen ?? false
     }
 
     // MARK: - CameraWindowDelegate

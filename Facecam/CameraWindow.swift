@@ -16,6 +16,12 @@ class CameraWindow: NSPanel {
     private let minimumWindowSize = NSSize(width: 100, height: 100)
     private let maximumWindowSize = NSSize(width: 2000, height: 2000)
 
+    // Full screen toggle state
+    private(set) var isFullScreen: Bool = false
+    private var previousFrame: NSRect?
+    private var previousShape: CameraShape?
+    private var fullScreenMenuItem: NSMenuItem?
+
     init() {
         let savedFrame = Self.loadSavedFrame() ?? NSRect(
             x: 100,
@@ -122,14 +128,15 @@ class CameraWindow: NSPanel {
             menu.addItem(cameraItem)
         }
 
-        // Center on screen option
-        let centerItem = NSMenuItem(
+        // Full screen toggle option
+        let fullScreenItem = NSMenuItem(
             title: "Full Screen View",
-            action: #selector(centerOnScreenClicked),
+            action: #selector(toggleFullScreenClicked),
             keyEquivalent: ""
         )
-        centerItem.target = self
-        menu.addItem(centerItem)
+        fullScreenItem.target = self
+        fullScreenMenuItem = fullScreenItem
+        menu.addItem(fullScreenItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -170,12 +177,24 @@ class CameraWindow: NSPanel {
         windowDelegate?.cameraWindowDidRequestHide()
     }
 
-    @objc private func centerOnScreenClicked() {
-        centerOnScreen()
+    @objc private func toggleFullScreenClicked() {
+        toggleFullScreen()
     }
 
-    func centerOnScreen() {
+    func toggleFullScreen() {
+        if isFullScreen {
+            exitFullScreen()
+        } else {
+            enterFullScreen()
+        }
+    }
+
+    private func enterFullScreen() {
         guard let screen = NSScreen.main else { return }
+
+        // Save current state before going full screen
+        previousFrame = frame
+        previousShape = currentShape
 
         let margin: CGFloat = 100
         let screenFrame = screen.visibleFrame
@@ -190,18 +209,36 @@ class CameraWindow: NSPanel {
             y: screenFrame.midY - size / 2
         )
 
-        // Temporarily allow larger size for full screen view
-        let savedMaxSize = maxSize
-        maxSize = NSSize(width: size, height: size)
-
         // Switch to rounded rectangle shape for full screen
         updateShape(.rounded)
         windowDelegate?.cameraWindowDidChangeShape(.rounded)
 
         setFrame(NSRect(origin: newOrigin, size: NSSize(width: size, height: size)), display: true, animate: true)
+
+        isFullScreen = true
+        updateFullScreenMenuItemTitle()
+    }
+
+    private func exitFullScreen() {
+        guard let savedFrame = previousFrame else { return }
+
+        // Restore previous shape
+        if let savedShape = previousShape {
+            updateShape(savedShape)
+            windowDelegate?.cameraWindowDidChangeShape(savedShape)
+        }
+
+        setFrame(savedFrame, display: true, animate: true)
         saveFrame()
 
-        maxSize = savedMaxSize
+        isFullScreen = false
+        previousFrame = nil
+        previousShape = nil
+        updateFullScreenMenuItemTitle()
+    }
+
+    private func updateFullScreenMenuItemTitle() {
+        fullScreenMenuItem?.title = isFullScreen ? "Exit Full Screen" : "Full Screen View"
     }
 
     @objc private func windowDidResize(_ notification: Notification) {

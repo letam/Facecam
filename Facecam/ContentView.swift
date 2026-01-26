@@ -111,9 +111,12 @@ struct ContentView: View {
         Divider()
 
         Button {
-            windowController.centerOnScreen()
+            windowController.toggleFullScreen()
         } label: {
-            Label("Full Screen View", systemImage: "arrow.up.left.and.arrow.down.right")
+            Label(
+                windowController.isFullScreen ? "Exit Full Screen" : "Full Screen View",
+                systemImage: windowController.isFullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right"
+            )
         }
         .disabled(!isCameraVisible)
     }
