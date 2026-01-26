@@ -1,6 +1,6 @@
 import AppKit
 
-class DraggableButtonView: NSView {
+class DraggableButtonView: NSView, NSMenuDelegate {
     var onToggle: (() -> Void)?
     var onDrag: ((NSPoint) -> Void)?
     var onRestorePreset: ((Int) -> Void)?
@@ -8,6 +8,8 @@ class DraggableButtonView: NSView {
     private var isDragging = false
     private var dragStartLocation: NSPoint = .zero
     private var isHovered = false
+    private var previewWindow: NSWindow?
+    private var restorePresetMenu: NSMenu?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -125,7 +127,9 @@ class DraggableButtonView: NSView {
         // Restore preset submenu
         let savedSlots = WindowStateManager.shared.savedSlots()
         if !savedSlots.isEmpty {
-            let restorePresetMenu = NSMenu()
+            let restoreMenu = NSMenu()
+            restoreMenu.delegate = self
+            self.restorePresetMenu = restoreMenu
             for slot in savedSlots {
                 let item = NSMenuItem(
                     title: "Slot \(slot)",
@@ -134,10 +138,10 @@ class DraggableButtonView: NSView {
                 )
                 item.tag = slot
                 item.target = self
-                restorePresetMenu.addItem(item)
+                restoreMenu.addItem(item)
             }
             let restorePresetItem = NSMenuItem(title: "Restore Position", action: nil, keyEquivalent: "")
-            restorePresetItem.submenu = restorePresetMenu
+            restorePresetItem.submenu = restoreMenu
             menu.addItem(restorePresetItem)
         }
 
@@ -159,7 +163,65 @@ class DraggableButtonView: NSView {
 
     @objc private func restorePresetClicked(_ sender: NSMenuItem) {
         let slot = sender.tag
+        hidePreviewWindow()
         onRestorePreset?(slot)
+    }
+
+    // MARK: - NSMenuDelegate
+
+    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        guard menu === restorePresetMenu else {
+            hidePreviewWindow()
+            return
+        }
+
+        guard let item = item, item.tag > 0,
+              let state = WindowStateManager.shared.loadState(fromSlot: item.tag) else {
+            hidePreviewWindow()
+            return
+        }
+
+        showPreviewWindow(for: state)
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        hidePreviewWindow()
+    }
+
+    private func showPreviewWindow(for state: WindowState) {
+        if previewWindow == nil {
+            let window = NSWindow(
+                contentRect: .zero,
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false
+            )
+            window.level = .floating
+            window.backgroundColor = .clear
+            window.isOpaque = false
+            window.hasShadow = false
+            window.ignoresMouseEvents = true
+
+            let previewView = NSView(frame: .zero)
+            previewView.wantsLayer = true
+            previewView.layer?.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.3).cgColor
+            previewView.layer?.borderColor = NSColor.systemBlue.withAlphaComponent(0.8).cgColor
+            previewView.layer?.borderWidth = 3
+
+            window.contentView = previewView
+            previewWindow = window
+        }
+
+        // Apply shape corner radius
+        let cornerRadius = min(state.width, state.height) * state.cameraShape.cornerRadiusMultiplier
+        previewWindow?.contentView?.layer?.cornerRadius = cornerRadius
+
+        previewWindow?.setFrame(state.frame, display: true)
+        previewWindow?.orderFront(nil)
+    }
+
+    private func hidePreviewWindow() {
+        previewWindow?.orderOut(nil)
     }
 }
 

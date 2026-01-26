@@ -188,6 +188,7 @@ class CameraWindow: NSPanel, NSMenuDelegate {
     private var fullScreenMenuItem: NSMenuItem?
     private var savePresetMenu: NSMenu?
     private var restorePresetMenu: NSMenu?
+    private var previewWindow: NSWindow?
 
     init() {
         let savedFrame = Self.loadSavedFrame() ?? NSRect(
@@ -540,6 +541,62 @@ class CameraWindow: NSPanel, NSMenuDelegate {
                 }
             }
         }
+    }
+
+    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        // Only handle restore preset menu
+        guard menu === restorePresetMenu else {
+            hidePreviewWindow()
+            return
+        }
+
+        guard let item = item, item.tag > 0,
+              let state = WindowStateManager.shared.loadState(fromSlot: item.tag) else {
+            hidePreviewWindow()
+            return
+        }
+
+        showPreviewWindow(for: state)
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        hidePreviewWindow()
+    }
+
+    private func showPreviewWindow(for state: WindowState) {
+        if previewWindow == nil {
+            let window = NSWindow(
+                contentRect: .zero,
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false
+            )
+            window.level = .floating
+            window.backgroundColor = .clear
+            window.isOpaque = false
+            window.hasShadow = false
+            window.ignoresMouseEvents = true
+
+            let previewView = NSView(frame: .zero)
+            previewView.wantsLayer = true
+            previewView.layer?.backgroundColor = NSColor.systemBlue.withAlphaComponent(0.3).cgColor
+            previewView.layer?.borderColor = NSColor.systemBlue.withAlphaComponent(0.8).cgColor
+            previewView.layer?.borderWidth = 3
+
+            window.contentView = previewView
+            previewWindow = window
+        }
+
+        // Apply shape corner radius
+        let cornerRadius = min(state.width, state.height) * state.cameraShape.cornerRadiusMultiplier
+        previewWindow?.contentView?.layer?.cornerRadius = cornerRadius
+
+        previewWindow?.setFrame(state.frame, display: true)
+        previewWindow?.orderFront(nil)
+    }
+
+    private func hidePreviewWindow() {
+        previewWindow?.orderOut(nil)
     }
 
     override var canBecomeKey: Bool { true }
