@@ -23,17 +23,11 @@ A native macOS menu bar app that displays your webcam feed in a customizable flo
 ## Build & Run
 
 ```bash
+# Build and run
+./run.sh --build
+
+# Run only (skip build)
 ./run.sh
-```
-
-Or manually:
-
-```bash
-# Build
-xcodebuild -project Facecam.xcodeproj -scheme Facecam -configuration Debug build
-
-# Run
-open "$(ls -td ~/Library/Developer/Xcode/DerivedData/Facecam-*/Build/Products/Debug/Facecam.app | head -1)"
 ```
 
 ## Usage
