@@ -191,12 +191,20 @@ class CameraWindow: NSPanel, NSMenuDelegate {
     private var previewWindow: NSWindow?
 
     init() {
-        let savedFrame = Self.loadSavedFrame() ?? NSRect(
-            x: 100,
-            y: 100,
-            width: 200,
-            height: 200
-        )
+        let defaultFrame = NSRect(x: 100, y: 100, width: 200, height: 200)
+        var savedFrame = Self.loadSavedFrame() ?? defaultFrame
+
+        // If the saved frame is off-screen (e.g. external monitor disconnected), move to main screen
+        let isOnScreen = NSScreen.screens.contains { screen in
+            screen.frame.intersects(savedFrame)
+        }
+        if !isOnScreen, let mainScreen = NSScreen.main {
+            let visibleFrame = mainScreen.visibleFrame
+            savedFrame.origin = NSPoint(
+                x: visibleFrame.maxX - savedFrame.width - 20,
+                y: visibleFrame.minY + 20
+            )
+        }
 
         super.init(
             contentRect: savedFrame,
@@ -385,9 +393,19 @@ class CameraWindow: NSPanel, NSMenuDelegate {
         let slot = sender.tag
         guard let state = WindowStateManager.shared.loadState(fromSlot: slot) else { return }
 
+        var targetFrame = state.frame
+        let isOnScreen = NSScreen.screens.contains { $0.frame.intersects(targetFrame) }
+        if !isOnScreen, let mainScreen = NSScreen.main {
+            let visibleFrame = mainScreen.visibleFrame
+            targetFrame.origin = NSPoint(
+                x: visibleFrame.maxX - targetFrame.width - 20,
+                y: visibleFrame.minY + 20
+            )
+        }
+
         updateShape(state.cameraShape)
         windowDelegate?.cameraWindowDidChangeShape(state.cameraShape)
-        setFrame(state.frame, display: true, animate: true)
+        setFrame(targetFrame, display: true, animate: true)
         saveFrame()
 
         // Exit full screen mode if we were in it

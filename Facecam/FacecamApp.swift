@@ -88,10 +88,20 @@ class CameraWindowController: ObservableObject, CameraWindowDelegate {
         // Show window first if needed
         isVisible = true
 
+        var targetFrame = state.frame
+        let isOnScreen = NSScreen.screens.contains { $0.frame.intersects(targetFrame) }
+        if !isOnScreen, let mainScreen = NSScreen.main {
+            let visibleFrame = mainScreen.visibleFrame
+            targetFrame.origin = NSPoint(
+                x: visibleFrame.maxX - targetFrame.width - 20,
+                y: visibleFrame.minY + 20
+            )
+        }
+
         // Apply the preset
         shape = state.cameraShape
         window?.updateShape(state.cameraShape)
-        window?.setFrame(state.frame, display: true, animate: true)
+        window?.setFrame(targetFrame, display: true, animate: true)
         onShapeChanged?(state.cameraShape)
     }
 
