@@ -49,11 +49,11 @@ class CameraManager: ObservableObject {
     }
 
     private func updateVideoMirroring() {
-        // Mirror to match the preview layer so toggling blur doesn't flip the image
+        // Unmirrored, matching the preview layer so toggling blur doesn't flip the image
         if let connection = videoOutput.connection(with: .video),
            connection.isVideoMirroringSupported {
             connection.automaticallyAdjustsVideoMirroring = false
-            connection.isVideoMirrored = true
+            connection.isVideoMirrored = false
         }
     }
 

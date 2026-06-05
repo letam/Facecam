@@ -41,10 +41,10 @@ class CameraPreviewNSView: NSView {
         previewLayer.frame = bounds
         previewLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
 
-        // Mirror to match the processed blur output so toggling blur doesn't flip the image
+        // Unmirrored, matching the processed blur output so toggling blur doesn't flip the image
         if let connection = previewLayer.connection, connection.isVideoMirroringSupported {
             connection.automaticallyAdjustsVideoMirroring = false
-            connection.isVideoMirrored = true
+            connection.isVideoMirrored = false
         }
 
         layer?.addSublayer(previewLayer)
