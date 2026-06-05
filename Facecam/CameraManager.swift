@@ -13,10 +13,48 @@ class CameraManager: ObservableObject {
     let captureSession = AVCaptureSession()
     private var currentInput: AVCaptureDeviceInput?
 
+    let blurProcessor = BackgroundBlurProcessor()
+    private let videoOutput = AVCaptureVideoDataOutput()
+    private let videoQueue = DispatchQueue(label: "com.facecam.videoProcessing")
+
+    @Published var isBackgroundBlurEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isBackgroundBlurEnabled, forKey: "isBackgroundBlurEnabled")
+            blurProcessor.isEnabled = isBackgroundBlurEnabled
+        }
+    }
+
     private init() {
+        isBackgroundBlurEnabled = UserDefaults.standard.bool(forKey: "isBackgroundBlurEnabled")
+        blurProcessor.isEnabled = isBackgroundBlurEnabled
         checkAuthorization()
         loadAvailableCameras()
         setupNotifications()
+        setupVideoOutput()
+    }
+
+    private func setupVideoOutput() {
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.setSampleBufferDelegate(blurProcessor, queue: videoQueue)
+
+        captureSession.beginConfiguration()
+        if captureSession.canAddOutput(videoOutput) {
+            captureSession.addOutput(videoOutput)
+        }
+        captureSession.commitConfiguration()
+        updateVideoMirroring()
+    }
+
+    private func updateVideoMirroring() {
+        // Mirror to match the preview layer so toggling blur doesn't flip the image
+        if let connection = videoOutput.connection(with: .video),
+           connection.isVideoMirroringSupported {
+            connection.automaticallyAdjustsVideoMirroring = false
+            connection.isVideoMirrored = true
+        }
     }
 
     private func setupNotifications() {
@@ -112,6 +150,7 @@ class CameraManager: ObservableObject {
         }
 
         captureSession.commitConfiguration()
+        updateVideoMirroring()
     }
 
     func startCapture() {

@@ -90,6 +90,13 @@ struct ContentView: View {
             Divider()
         }
 
+        Toggle(isOn: $cameraManager.isBackgroundBlurEnabled) {
+            Label("Blur Background", systemImage: "person.and.background.dotted")
+        }
+        .toggleStyle(.switch)
+
+        Divider()
+
         VStack(alignment: .leading, spacing: 4) {
             Text("Shape")
                 .font(.caption)

@@ -186,6 +186,7 @@ class CameraWindow: NSPanel, NSMenuDelegate {
     private var previousFrame: NSRect?
     private var previousShape: CameraShape?
     private var fullScreenMenuItem: NSMenuItem?
+    private var blurMenuItem: NSMenuItem?
     private var savePresetMenu: NSMenu?
     private var restorePresetMenu: NSMenu?
     private var previewWindow: NSWindow?
@@ -312,6 +313,17 @@ class CameraWindow: NSPanel, NSMenuDelegate {
             menu.addItem(cameraItem)
         }
 
+        // Background blur toggle
+        let blurItem = NSMenuItem(
+            title: "Blur Background",
+            action: #selector(blurMenuItemClicked),
+            keyEquivalent: ""
+        )
+        blurItem.target = self
+        blurItem.state = CameraManager.shared.isBackgroundBlurEnabled ? .on : .off
+        blurMenuItem = blurItem
+        menu.addItem(blurItem)
+
         // Full screen toggle option
         let fullScreenItem = NSMenuItem(
             title: "Full Screen View",
@@ -361,7 +373,13 @@ class CameraWindow: NSPanel, NSMenuDelegate {
         )
         menu.addItem(quitItem)
 
+        menu.delegate = self
         contentView?.menu = menu
+    }
+
+    @objc private func blurMenuItemClicked() {
+        CameraManager.shared.isBackgroundBlurEnabled.toggle()
+        blurMenuItem?.state = CameraManager.shared.isBackgroundBlurEnabled ? .on : .off
     }
 
     @objc private func shapeMenuItemClicked(_ sender: NSMenuItem) {
@@ -525,7 +543,10 @@ class CameraWindow: NSPanel, NSMenuDelegate {
     // MARK: - NSMenuDelegate
 
     func menuNeedsUpdate(_ menu: NSMenu) {
-        if menu === savePresetMenu {
+        if menu === contentView?.menu {
+            // Blur may have been toggled from the menu bar dropdown
+            blurMenuItem?.state = CameraManager.shared.isBackgroundBlurEnabled ? .on : .off
+        } else if menu === savePresetMenu {
             menu.removeAllItems()
             for slot in 1...10 {
                 let hasState = WindowStateManager.shared.hasState(inSlot: slot)
