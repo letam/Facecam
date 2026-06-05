@@ -16,7 +16,7 @@ class BackgroundBlurProcessor: NSObject, AVCaptureVideoDataOutputSampleBufferDel
     /// Previous frame's smoothed mask (at native mask resolution); only touched on the video queue.
     private var smoothedMask: CIImage?
     /// Weight of the new mask per frame; lower = more smoothing, more lag.
-    private let maskSmoothingAmount: Float = 0.2
+    private let maskSmoothingAmount: Float = 0.15
 
     private let segmentationRequest: VNGeneratePersonSegmentationRequest = {
         let request = VNGeneratePersonSegmentationRequest()
